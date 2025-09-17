@@ -46,7 +46,7 @@ def upload_to_eita(local_file):
 
     # مسیر یکتا برای پروفایل هر اجرا
     tmp_profile = tempfile.mkdtemp()
-    chrome_options.add_argument(f"--user-data-dir={tmp_profile}")
+    # chrome_options.add_argument(f"--user-data-dir={tmp_profile}")
 
     service = Service(CHROMEDRIVER_PATH)
     driver = webdriver.Chrome(service=service, options=chrome_options)
