@@ -7,13 +7,13 @@ from telegram.ext import Updater, MessageHandler, Filters
 # توکن‌ها و آیدی‌ها
 TELEGRAM_BOT_TOKEN = "1664467711:AAEMVD7dLYYn7lpJC85vqV9ACxgTU9PuM-g"
 EITA_BOT_TOKEN = "bot410579:ca343b5b-678a-4b57-a206-952bc371e5ea"
-EITA_CHAT_ID = 10898011  # حتماً عددی باشه، برای گروه منفی است
+EITA_CHAT_ID = 10898011  
 # =======================
 
-# قفل برای جلوگیری از همزمانی
+
 is_busy = False
 
-# تابع برای ارسال فایل به ایتا
+
 def send_to_eita(file_path):
     with open(file_path, 'rb') as f:
         response = requests.post(
@@ -27,7 +27,7 @@ def send_to_eita(file_path):
         )
     print("Eita API Response:", response.text)
 
-# دانلود و ارسال فایل
+
 def download_and_send(url):
     local_filename = "/home/hoaz/bot/" + url.split("/")[-1]
     # دانلود فایل
@@ -40,7 +40,7 @@ def download_and_send(url):
     # حذف فایل
     os.remove(local_filename)
 
-# هندلر پیام‌های تلگرام
+
 def handle_message(update, context):
     global is_busy
     url = update.message.text.strip()
