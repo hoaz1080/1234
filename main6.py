@@ -22,7 +22,6 @@ EITA_URL = "https://web.eitaa.com/#@myhoaz"
 DOWNLOAD_CHUNK = 1024*1024  # 1MB
 # ---------------------------------------
 
-# صف لینک‌ها
 link_queue = queue.Queue()
 is_processing = False
 
@@ -36,18 +35,17 @@ def download_file(url):
                 f.write(chunk)
     return local_filename
 
-# تابع آپلود فایل در ایتا با Selenium
+# تابع آپلود فایل در ایتا
 def upload_to_eita(local_file):
     chrome_options = Options()
     chrome_options.binary_location = CHROME_PATH
-    chrome_options.add_argument("--headless")  # برای تست اول حذف کن
+    chrome_options.add_argument("--headless")  # برای دیدن پنجره حذف کن
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--window-size=1920,1080")
 
     service = Service(CHROMEDRIVER_PATH)
     driver = webdriver.Chrome(service=service, options=chrome_options)
-    wait = WebDriverWait(driver, 15)
 
     # ورود با کوکی‌ها
     driver.get(EITA_URL)
@@ -56,36 +54,26 @@ def upload_to_eita(local_file):
     for cookie in cookies:
         driver.add_cookie(cookie)
     driver.refresh()
-    time.sleep(3)
 
-    try:
-        # کلیک روی آیکون attach
-        attach_btn = wait.until(EC.element_to_be_clickable(
-            (By.CSS_SELECTOR, ".btn-icon.btn-menu-toggle.attach-file.tgico-attach")))
-        attach_btn.click()
-        time.sleep(1)
+    wait = WebDriverWait(driver, 30)
 
-        # انتخاب گزینه فایل
-        file_option = wait.until(EC.element_to_be_clickable(
-            (By.XPATH, '//div[text()="فایل"]')))
-        file_option.click()
+    # کلیک روی دکمه attach
+    attach_btn = wait.until(EC.element_to_be_clickable(
+        (By.XPATH, '//*[@id="column-center"]/div/div/div[4]/div/div[1]/div[7]/div[2]')))
+    attach_btn.click()
 
-        # آپلود فایل
-        file_input = wait.until(EC.presence_of_element_located(
-            (By.XPATH, '//input[@type="file"]')))
-        file_input.send_keys(os.path.abspath(local_file))
+    # آپلود فایل
+    file_input = wait.until(EC.presence_of_element_located((By.XPATH, '//input[@type="file"]')))
+    file_input.send_keys(os.path.abspath(local_file))
 
-        # صبر برای آپلود کامل
-        time.sleep(5)
-        print(f"✅ فایل {local_file} آپلود شد.")
-    except Exception as e:
-        print(f"❌ خطا در آپلود فایل: {e}")
-    finally:
-        driver.quit()
-        if os.path.exists(local_file):
-            os.remove(local_file)
+    # صبر برای آپلود
+    time.sleep(5)
 
-# پردازش لینک‌ها
+    driver.quit()
+    os.remove(local_file)
+    print(f"✅ فایل {local_file} آپلود شد و حذف شد.")
+
+# پردازش صف لینک‌ها
 def process_queue():
     global is_processing
     while True:
@@ -97,14 +85,14 @@ def process_queue():
             upload_to_eita(local_file)
             context.bot.send_message(chat_id=chat_id, text="✅ فایل به ایتا ارسال شد!")
         except Exception as e:
-            context.bot.send_message(chat_id=chat_id, text=f"❌ خطا: {e}")
+            context.bot.send_message(chat_id=chat_id, text=f"❌ خطا در آپلود فایل: {e}")
         is_processing = False
         link_queue.task_done()
 
-# هندلر پیام‌ها
+# هندلر پیام‌های تلگرام
 def handle_message(update: Update, context: CallbackContext):
     url = update.message.text.strip()
-    chat_id = update.message.chat.id
+    chat_id = update.message.chat_id
     if url.startswith("http://") or url.startswith("https://"):
         if is_processing:
             update.message.reply_text("⏳ سرور در حال پردازش لینک قبلی است، لطفاً صبر کنید...")
@@ -120,6 +108,7 @@ def main():
     dp = updater.dispatcher
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
 
+    # شروع پردازش لینک‌ها در یک thread جدا
     threading.Thread(target=process_queue, daemon=True).start()
 
     updater.start_polling()
