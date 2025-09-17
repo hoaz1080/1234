@@ -7,6 +7,9 @@ import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from telegram import Update
 from telegram.ext import Updater, MessageHandler, Filters, CallbackContext
 
@@ -14,8 +17,8 @@ from telegram.ext import Updater, MessageHandler, Filters, CallbackContext
 TELEGRAM_BOT_TOKEN = "1664467711:AAEMVD7dLYYn7lpJC85vqV9ACxgTU9PuM-g"
 CHROMEDRIVER_PATH = "/usr/bin/chromedriver"
 CHROME_PATH = "/usr/bin/chromium-browser"
-COOKIES_FILE = "/home/hoaz/cookies.json"
-EITA_URL = "https://web.eitaa.com/#@myhoaz"  # برای ورود با کوکی‌ها
+COOKIES_FILE = "/home/hoaz/cookies.json"  # مسیر دقیق فایل cookies.json روی سرور
+EITA_URL = "https://web.eitaa.com/#@myhoaz"
 DOWNLOAD_CHUNK = 1024*1024  # 1MB
 # ---------------------------------------
 
@@ -33,7 +36,7 @@ def download_file(url):
                 f.write(chunk)
     return local_filename
 
-# تابع آپلود فایل در ایتا با Selenium Headless
+# تابع آپلود فایل در Eita با Selenium Headless
 def upload_to_eita(local_file):
     chrome_options = Options()
     chrome_options.binary_location = CHROME_PATH
@@ -54,11 +57,20 @@ def upload_to_eita(local_file):
     driver.refresh()
     time.sleep(3)
 
-    # پیدا کردن المان آپلود و ارسال فایل
-    # ⚠️ این قسمت باید با structure واقعی سایت ایتا اصلاح شود
-    upload_input = driver.find_element("xpath", '//input[@type="file"]')
-    upload_input.send_keys(os.path.abspath(local_file))
-    time.sleep(5)  # زمان برای آپلود
+    # پیدا کردن دکمه آپلود و کلیک
+    upload_button = WebDriverWait(driver, 20).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, ".attach-file"))
+    )
+    upload_button.click()
+
+    # پیدا کردن input[type='file'] و ارسال فایل
+    file_input = WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
+    )
+    file_input.send_keys(os.path.abspath(local_file))
+
+    # صبر برای آپلود کامل
+    time.sleep(5)
 
     driver.quit()
     os.remove(local_file)
@@ -71,10 +83,10 @@ def process_queue():
         url, chat_id, context = link_queue.get()
         is_processing = True
         try:
-            context.bot.send_message(chat_id=chat_id, text="⏳ در حال دانلود و آپلود به ایتا...")
+            context.bot.send_message(chat_id=chat_id, text="⏳ در حال دانلود و آپلود به Eita...")
             local_file = download_file(url)
             upload_to_eita(local_file)
-            context.bot.send_message(chat_id=chat_id, text="✅ فایل به ایتا ارسال شد!")
+            context.bot.send_message(chat_id=chat_id, text="✅ فایل به Eita ارسال شد!")
         except Exception as e:
             context.bot.send_message(chat_id=chat_id, text=f"❌ خطا: {e}")
         is_processing = False
