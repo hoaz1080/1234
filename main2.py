@@ -7,7 +7,7 @@ from telegram.ext import Updater, MessageHandler, Filters
 # توکن‌ها و آیدی‌ها
 TELEGRAM_BOT_TOKEN = "1664467711:AAEMVD7dLYYn7lpJC85vqV9ACxgTU9PuM-g"
 EITA_BOT_TOKEN = "bot410579:ca343b5b-678a-4b57-a206-952bc371e5ea"
-EITA_CHAT_ID = myhoaz  # حتماً عددی باشه، برای گروه منفی است
+EITA_CHAT_ID = 10898011  # حتماً عددی باشه، برای گروه منفی است
 # =======================
 
 # قفل برای جلوگیری از همزمانی
@@ -23,7 +23,6 @@ def send_to_eita(file_path):
                 "chat_id": EITA_CHAT_ID,
                 "title": os.path.basename(file_path),
                 "caption": "File sent from bot",
-                "date": int(time.time()) + 30
             }
         )
     print("Eita API Response:", response.text)
