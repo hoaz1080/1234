@@ -1,5 +1,6 @@
 import os
 import requests
+import time
 from telegram.ext import Updater, MessageHandler, Filters
 
 # =======================
@@ -22,7 +23,7 @@ def send_to_eita(file_path):
                 "chat_id": EITA_CHAT_ID,
                 "title": os.path.basename(file_path),
                 "caption": "File sent from bot",
-                "date": int(os.time()) + 30  # ارسال 30 ثانیه بعد
+                "date": int(time.time()) + 30
             }
         )
     print("Eita API Response:", response.text)
