@@ -29,7 +29,7 @@ def send_to_eita(file_path):
 
 # دانلود و ارسال فایل
 def download_and_send(url):
-    local_filename = "/home/username/bot/" + url.split("/")[-1]  # مسیر روی سرور
+   local_filename = "/home/hoaz/bot/" + url.split("/")[-1]
     # دانلود فایل
     r = requests.get(url, stream=True)
     with open(local_filename, 'wb') as f:
