@@ -16,7 +16,7 @@ from telegram.ext import Updater, MessageHandler, Filters, CallbackContext
 # ---------------- CONFIG ----------------
 TELEGRAM_BOT_TOKEN = "1664467711:AAEMVD7dLYYn7lpJC85vqV9ACxgTU9PuM-g"
 CHROMEDRIVER_PATH = "/usr/bin/chromedriver"
-CHROME_PATH = "/usr/bin/chromium-browser"
+CHROME_PATH = "/snap/bin/chromium"
 COOKIES_FILE = "/home/hoaz/cookies.json"  # مسیر دقیق فایل cookies.json روی سرور
 EITA_URL = "https://web.eitaa.com/#@myhoaz"
 DOWNLOAD_CHUNK = 1024*1024  # 1MB
