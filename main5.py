@@ -97,7 +97,7 @@ def handle_message(update: Update, context: CallbackContext):
 def main():
     updater = Updater(TELEGRAM_BOT_TOKEN)
     dp = updater.dispatcher
-    dp.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    dp.add_handler(MessageHandler(filters.text & ~filters.command, handle_message))
 
     # شروع پردازش لینک‌ها در یک thread جدا
     threading.Thread(target=process_queue, daemon=True).start()
