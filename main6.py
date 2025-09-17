@@ -3,7 +3,6 @@ import json
 import time
 import queue
 import threading
-import tempfile
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -40,10 +39,6 @@ def upload_to_eita(local_file):
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--window-size=1920,1080")
 
-    # فولدر temporary یکتا برای user-data-dir
-    tmp_profile = tempfile.mkdtemp()
-    chrome_options.add_argument(f"--user-data-dir={tmp_profile}")
-
     service = Service(CHROMEDRIVER_PATH)
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
@@ -56,10 +51,20 @@ def upload_to_eita(local_file):
     driver.refresh()
     time.sleep(3)
 
-    # ⚠️ باید xpath واقعی input فایل ایتا رو جایگزین کنید
+    # کلیک روی دکمه Attach
+    attach_button = driver.find_element("css selector", ".btn-icon.btn-menu-toggle.attach-file.tgico-attach")
+    attach_button.click()
+    time.sleep(1)
+
+    # کلیک روی گزینه فایل (با text="فایل")
+    file_option = driver.find_element("xpath", '//div[text()="فایل"]')
+    file_option.click()
+    time.sleep(1)
+
+    # آپلود فایل
     upload_input = driver.find_element("xpath", '//input[@type="file"]')
     upload_input.send_keys(os.path.abspath(local_file))
-    time.sleep(5)  # زمان برای آپلود
+    time.sleep(5)
 
     driver.quit()
     os.remove(local_file)
