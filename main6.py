@@ -45,7 +45,7 @@ def upload_to_eita(local_file):
     chrome_options.add_argument("--window-size=1920,1080")
 
     # مسیر یکتا برای پروفایل هر اجرا
-    tmp_profile = tempfile.mkdtemp()
+    # tmp_profile = tempfile.mkdtemp()
     # chrome_options.add_argument(f"--user-data-dir={tmp_profile}")
 
     service = Service(CHROMEDRIVER_PATH)
