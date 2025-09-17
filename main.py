@@ -5,7 +5,7 @@ from telegram.ext import Updater, MessageHandler, Filters
 # توکن‌ها
 TELEGRAM_BOT_TOKEN = "1664467711:AAEMVD7dLYYn7lpJC85vqV9ACxgTU9PuM-g"
 EITA_BOT_TOKEN = "bot410579:ca343b5b-678a-4b57-a206-952bc371e5ea"
-EITA_CHAT_ID = "hoaz1234"
+EITA_CHAT_ID = "242642146"
 
 # تابع برای دانلود و ارسال
 def download_and_send(url):
