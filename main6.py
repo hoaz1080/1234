@@ -15,7 +15,6 @@ from telegram.ext import Updater, MessageHandler, Filters, CallbackContext
 
 # ---------------- CONFIG ----------------
 TELEGRAM_BOT_TOKEN = "1664467711:AAEMVD7dLYYn7lpJC85vqV9ACxgTU9PuM-g"
-CHAT_ID = "10898011"  # اگر میخوای همه پیام‌ها برن تو کانال، همینو بذار
 CHROMEDRIVER_PATH = "/usr/bin/chromedriver"
 CHROME_PATH = "/usr/bin/chromium-browser"
 COOKIES_FILE = "/home/hoaz/cookies.json"
@@ -23,9 +22,11 @@ EITA_URL = "https://web.eitaa.com/#@myhoaz"
 DOWNLOAD_CHUNK = 1024*1024  # 1MB
 # ---------------------------------------
 
+# صف لینک‌ها
 link_queue = queue.Queue()
 is_processing = False
 
+# تابع دانلود فایل
 def download_file(url):
     local_filename = url.split("/")[-1]
     with requests.get(url, stream=True) as r:
@@ -35,51 +36,56 @@ def download_file(url):
                 f.write(chunk)
     return local_filename
 
+# تابع آپلود فایل در ایتا با Selenium
 def upload_to_eita(local_file):
     chrome_options = Options()
     chrome_options.binary_location = CHROME_PATH
-    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless")  # برای تست اول حذف کن
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--window-size=1920,1080")
 
     service = Service(CHROMEDRIVER_PATH)
     driver = webdriver.Chrome(service=service, options=chrome_options)
+    wait = WebDriverWait(driver, 15)
+
+    # ورود با کوکی‌ها
+    driver.get(EITA_URL)
+    with open(COOKIES_FILE, "r", encoding="utf-8") as f:
+        cookies = json.load(f)
+    for cookie in cookies:
+        driver.add_cookie(cookie)
+    driver.refresh()
+    time.sleep(3)
 
     try:
-        driver.get(EITA_URL)
-        with open(COOKIES_FILE, "r", encoding="utf-8") as f:
-            cookies = json.load(f)
-        for cookie in cookies:
-            driver.add_cookie(cookie)
-        driver.refresh()
-        time.sleep(3)
+        # کلیک روی آیکون attach
+        attach_btn = wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, ".btn-icon.btn-menu-toggle.attach-file.tgico-attach")))
+        attach_btn.click()
+        time.sleep(1)
 
-        # بررسی iframe
-        iframes = driver.find_elements(By.TAG_NAME, "iframe")
-        if iframes:
-            driver.switch_to.frame(iframes[0])
+        # انتخاب گزینه فایل
+        file_option = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, '//div[text()="فایل"]')))
+        file_option.click()
 
-        # کلیک روی دکمه Attach
-        attach_button = WebDriverWait(driver, 15).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, ".btn-icon.btn-menu-toggle.attach-file.tgico-attach"))
-        )
-        attach_button.click()
-
-        # input[type=file] برای آپلود فایل
-        file_input = WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
-        )
+        # آپلود فایل
+        file_input = wait.until(EC.presence_of_element_located(
+            (By.XPATH, '//input[@type="file"]')))
         file_input.send_keys(os.path.abspath(local_file))
-        time.sleep(5)
 
+        # صبر برای آپلود کامل
+        time.sleep(5)
         print(f"✅ فایل {local_file} آپلود شد.")
     except Exception as e:
         print(f"❌ خطا در آپلود فایل: {e}")
     finally:
         driver.quit()
-        os.remove(local_file)
+        if os.path.exists(local_file):
+            os.remove(local_file)
 
+# پردازش لینک‌ها
 def process_queue():
     global is_processing
     while True:
@@ -95,9 +101,10 @@ def process_queue():
         is_processing = False
         link_queue.task_done()
 
+# هندلر پیام‌ها
 def handle_message(update: Update, context: CallbackContext):
     url = update.message.text.strip()
-    chat_id = update.message.chat_id
+    chat_id = update.message.chat.id
     if url.startswith("http://") or url.startswith("https://"):
         if is_processing:
             update.message.reply_text("⏳ سرور در حال پردازش لینک قبلی است، لطفاً صبر کنید...")
@@ -107,6 +114,7 @@ def handle_message(update: Update, context: CallbackContext):
     else:
         update.message.reply_text("لطفاً یک لینک معتبر ارسال کنید.")
 
+# اجرای ربات
 def main():
     updater = Updater(TELEGRAM_BOT_TOKEN)
     dp = updater.dispatcher
