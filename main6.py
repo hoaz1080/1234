@@ -7,11 +7,15 @@ import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from telegram import Update
 from telegram.ext import Updater, MessageHandler, Filters, CallbackContext
 
 # ---------------- CONFIG ----------------
 TELEGRAM_BOT_TOKEN = "1664467711:AAEMVD7dLYYn7lpJC85vqV9ACxgTU9PuM-g"
+CHAT_ID = "10898011"  # اگر میخوای همه پیام‌ها برن تو کانال، همینو بذار
 CHROMEDRIVER_PATH = "/usr/bin/chromedriver"
 CHROME_PATH = "/usr/bin/chromium-browser"
 COOKIES_FILE = "/home/hoaz/cookies.json"
@@ -42,33 +46,39 @@ def upload_to_eita(local_file):
     service = Service(CHROMEDRIVER_PATH)
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # ورود با کوکی‌ها
-    driver.get(EITA_URL)
-    with open(COOKIES_FILE, "r", encoding="utf-8") as f:
-        cookies = json.load(f)
-    for cookie in cookies:
-        driver.add_cookie(cookie)
-    driver.refresh()
-    time.sleep(3)
+    try:
+        driver.get(EITA_URL)
+        with open(COOKIES_FILE, "r", encoding="utf-8") as f:
+            cookies = json.load(f)
+        for cookie in cookies:
+            driver.add_cookie(cookie)
+        driver.refresh()
+        time.sleep(3)
 
-    # کلیک روی دکمه Attach
-    attach_button = driver.find_element("css selector", ".btn-icon.btn-menu-toggle.attach-file.tgico-attach")
-    attach_button.click()
-    time.sleep(1)
+        # بررسی iframe
+        iframes = driver.find_elements(By.TAG_NAME, "iframe")
+        if iframes:
+            driver.switch_to.frame(iframes[0])
 
-    # کلیک روی گزینه فایل (با text="فایل")
-    file_option = driver.find_element("xpath", '//div[text()="فایل"]')
-    file_option.click()
-    time.sleep(1)
+        # کلیک روی دکمه Attach
+        attach_button = WebDriverWait(driver, 15).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, ".btn-icon.btn-menu-toggle.attach-file.tgico-attach"))
+        )
+        attach_button.click()
 
-    # آپلود فایل
-    upload_input = driver.find_element("xpath", '//input[@type="file"]')
-    upload_input.send_keys(os.path.abspath(local_file))
-    time.sleep(5)
+        # input[type=file] برای آپلود فایل
+        file_input = WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
+        )
+        file_input.send_keys(os.path.abspath(local_file))
+        time.sleep(5)
 
-    driver.quit()
-    os.remove(local_file)
-    print(f"✅ فایل {local_file} آپلود شد و حذف گردید.")
+        print(f"✅ فایل {local_file} آپلود شد.")
+    except Exception as e:
+        print(f"❌ خطا در آپلود فایل: {e}")
+    finally:
+        driver.quit()
+        os.remove(local_file)
 
 def process_queue():
     global is_processing
