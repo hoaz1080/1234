@@ -9,7 +9,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from telegram import Update
-from telegram.ext import Updater, MessageHandler, CallbackContext, filters
+from telegram.ext import Updater, MessageHandler, CallbackContext, Filters
 
 # ---------------- CONFIG ----------------
 TELEGRAM_BOT_TOKEN = "1664467711:AAEMVD7dLYYn7lpJC85vqV9ACxgTU9PuM-g"
@@ -104,7 +104,7 @@ def handle_message(update: Update, context: CallbackContext):
 def main():
     updater = Updater(TELEGRAM_BOT_TOKEN)
     dp = updater.dispatcher
-    dp.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    dp.add_handler(MessageHandler(Filters.TEXT & ~Filters.COMMAND, handle_message))
 
     # شروع پردازش لینک‌ها در یک thread جدا
     threading.Thread(target=process_queue, daemon=True).start()
