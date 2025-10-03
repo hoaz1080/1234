@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+*.pot
+*.mo
+
+# Django
+*.sqlite3
+*.db
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+build/
+dist/
+.npm
+.eslintcache
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
